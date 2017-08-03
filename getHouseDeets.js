@@ -5,6 +5,35 @@ function renderStatus(statusText) {
   document.getElementById('status').textContent = statusText;
 }
 
+function copyToClipboard(txt){
+  var textArea = document.createElement("textarea");
+
+  textArea.style.position = 'fixed';
+  textArea.style.top = 0;
+  textArea.style.left = 0;
+  textArea.style.width = '2em';
+  textArea.style.height = '2em';
+  textArea.style.padding = 0;
+  textArea.style.border = 'none';
+  textArea.style.outline = 'none';
+  textArea.style.boxShadow = 'none';
+  textArea.style.background = 'transparent';
+  textArea.value = txt;
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    var successful = document.execCommand('copy');
+    var msg = successful ? 'successful' : 'unsuccessful';
+    console.log('Copying text command was ' + msg);
+    document.body.removeChild(textArea);
+    return true;
+  } catch (err) {
+    console.log('Oops, unable to copy');
+    document.body.removeChild(textArea);
+    return false;
+  }  
+}
+
 function getHarcourtsListingDetails(url, html, callback){
   var detailString = '';
 
@@ -68,10 +97,15 @@ function getHarcourtsListingDetails(url, html, callback){
 
   //add url 
   detailString += url + '\n';
+
+  if(copyToClipboard(detailString)){
+    detailString += '\n' + "Copied to clipboard!";
+  }
+  else{
+    detailString += '\n' + "Unable to copy to clipboard!";
+  }
   //pass all details to the popup
   callback(detailString);
-
-  //var successful = document.execCommand('copy');
 }
 
 function getBayleysListingDetails(url, html, callback){
@@ -152,6 +186,13 @@ function getBayleysListingDetails(url, html, callback){
   }
   //add url
   detailString += url;
+
+  if(copyToClipboard(detailString)){
+    detailString += '\n' + "Copied to clipboard!";
+  }
+  else{
+    detailString += '\n' + "Unable to copy to clipboard!";
+  }
 
   callback(detailString);
 }
