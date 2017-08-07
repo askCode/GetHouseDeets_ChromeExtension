@@ -1,4 +1,4 @@
-
+//Returns the page source of the current window location as string
 function DOMtoString(document_root) {
     var html = '',
         node = document_root.firstChild;

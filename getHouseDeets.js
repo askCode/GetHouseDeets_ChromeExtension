@@ -1,38 +1,50 @@
 //Source: How to get the dom contents of a page for manipulation
 //https://stackoverflow.com/questions/11684454/getting-the-source-html-of-the-current-page-from-chrome-extension
 
-function renderStatus(statusText) {
-  document.getElementById('status').textContent = statusText;
+function getHouseDeets(url, html, callback){
+
+  var detailString = 'Nothing found!'; 
+
+  //TODO: add logic for different real estate sites
+  //Below logic only works on harcourts site as of now
+  if(url.indexOf('harcourts') !== -1){
+    getHarcourtsListingDetails(url, html, callback);
+  }
+  else if(url.indexOf('bayleys') !== -1){
+    getBayleysListingDetails(url, html, callback);
+  }
+  else{
+    console.log('error!');
+    callback(detailString);
+  }
+}
+//Retrieves the page source html and processes it for housing details
+function onWindowLoad() {
+  chrome.tabs.executeScript(null, {
+    file: "getPageSource.js"
+  }, function() {
+    // If you try and inject into an extensions page or the webstore/NTP you'll get an error
+    if (chrome.runtime.lastError) {
+      renderStatus('Cannot execute GetHouseDeets on this page, \n ERROR: ' + chrome.runtime.lastError.message);
+    }
+  });
 }
 
-function copyToClipboard(txt){
-  var textArea = document.createElement("textarea");
+//add a listener to chrome
+chrome.runtime.onMessage.addListener(function(request, sender) {
+  if (request.action === "getSource") {
+    //run our main function below
+    getHouseDeets(request.url,request.source,renderStatus);
+  }
+  else{
+    renderStatus('Something went wrong!');
+  }
+});
 
-  textArea.style.position = 'fixed';
-  textArea.style.top = 0;
-  textArea.style.left = 0;
-  textArea.style.width = '2em';
-  textArea.style.height = '2em';
-  textArea.style.padding = 0;
-  textArea.style.border = 'none';
-  textArea.style.outline = 'none';
-  textArea.style.boxShadow = 'none';
-  textArea.style.background = 'transparent';
-  textArea.value = txt;
-  document.body.appendChild(textArea);
-  textArea.select();
-  try {
-    var successful = document.execCommand('copy');
-    var msg = successful ? 'successful' : 'unsuccessful';
-    console.log('Copying text command was ' + msg);
-    document.body.removeChild(textArea);
-    return true;
-  } catch (err) {
-    console.log('Oops, unable to copy');
-    document.body.removeChild(textArea);
-    return false;
-  }  
-}
+//hookup to the window onload event
+window.onload = onWindowLoad;
+
+///Generic and special functions below
 
 function getHarcourtsListingDetails(url, html, callback){
   var detailString = '';
@@ -140,7 +152,7 @@ function getBayleysListingDetails(url, html, callback){
     listingDetailFeatures.each(function(index, p){
       var txt = $.trim($(p)[0].innerHTML);
       if(txt !== ''){
-        detailString += txt + ', '
+        detailString += txt + ', ';
       }
     });
     detailString += '\n';
@@ -197,46 +209,35 @@ function getBayleysListingDetails(url, html, callback){
   callback(detailString);
 }
 
-function getHouseDeets(url, html, callback){
-
-  var detailString = 'Nothing found!'; 
-
-  //TODO: add logic for different real estate sites
-  //Below logic only works on harcourts site as of now
-  if(url.indexOf('harcourts') !== -1){
-    getHarcourtsListingDetails(url, html, callback);
-  }
-  else if(url.indexOf('bayleys' !== -1)){
-    getBayleysListingDetails(url, html, callback);
-  }
-  else{
-    console.log('error!');
-    callback(detailString);
-  }
+function renderStatus(statusText) {
+  document.getElementById('status').textContent = statusText;
 }
 
-function onWindowLoad() {
+function copyToClipboard(txt){
+  var textArea = document.createElement("textarea");
 
-  chrome.tabs.executeScript(null, {
-    file: "getPageSource.js"
-  }, function() {
-    // If you try and inject into an extensions page or the webstore/NTP you'll get an error
-    if (chrome.runtime.lastError) {
-      renderStatus('There was an error injecting script : \n' + chrome.runtime.lastError.message);
-    }
-  });
+  textArea.style.position = 'fixed';
+  textArea.style.top = 0;
+  textArea.style.left = 0;
+  textArea.style.width = '2em';
+  textArea.style.height = '2em';
+  textArea.style.padding = 0;
+  textArea.style.border = 'none';
+  textArea.style.outline = 'none';
+  textArea.style.boxShadow = 'none';
+  textArea.style.background = 'transparent';
+  textArea.value = txt;
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    var successful = document.execCommand('copy');
+    var msg = successful ? 'successful' : 'unsuccessful';
+    console.log('Copying text command was ' + msg);
+    document.body.removeChild(textArea);
+    return true;
+  } catch (err) {
+    console.log('Oops, unable to copy');
+    document.body.removeChild(textArea);
+    return false;
+  }  
 }
-
-//add a listener to chrome
-chrome.runtime.onMessage.addListener(function(request, sender) {
-  if (request.action === "getSource") {
-    //run our function below
-    getHouseDeets(request.url,request.source,renderStatus);
-  }
-  else{
-    renderStatus('Something went wrong!');
-  }
-});
-
-//hookup to the window onload event
-window.onload = onWindowLoad;
